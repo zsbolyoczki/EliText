@@ -621,7 +621,7 @@ INIT_COMMANDER_COMBAT_RATING = 0
 INIT_COMMANDER_LEGAL_STATUS = 0
 INIT_COMMANDER_CREDIT = 100
 INIT_SHIP_TYPE = 0
-INIT_SHIP_HULL = 10
+INIT_SHIP_HULL = 100
 INIT_SHIP_MAX_HULL = 100
 INIT_SHIP_DOCKING_COMPUTER = 0
 INIT_SHIP_FUEL = 10
@@ -923,7 +923,7 @@ def NewOrLoad():
         NewGame()
     else:
         _print("")
-        ANSWER = input(" Load previous GAME.? [Y/N] ").upper()
+        ANSWER = input(" Load previous game? [Y/N] ").upper()
         if ANSWER == "":
             ANSWER="Y"
         if ANSWER == "Y":
