@@ -17,6 +17,8 @@ class Game(object):
                  pgame_position, pmanual_docking_success_rate, pjump_count, pfight_count, pkill_count, pship_cargo,
                  pship_max_cargo, pcurrent_starystem, pship_missile_count, pship_max_missile_count, plightyears_traveled,
                  pship_mining_tool, pship_track, pship_flare_count, pship_max_flare_count):
+
+        # @todo: add time spent with game
         self._commander_name = pcommander_name
         self._commander_combat_rating = pcommander_combat_rating
         self._commander_legal_status = pcommander_legal_status
@@ -355,7 +357,8 @@ class GameConfig(object):
 
 class Starsystem(object):
     def __init__(self, psystemname, pstationname, pposx, pposy, peconomy, ppolitics, ptechlevel, pdockingfee,
-                 pfuelprice, phullrepairprice, pgoods, pdockingcomputerprice, pminingtoolprice):
+                 pfuelprice, phullrepairprice, pgoods, pdockingcomputerprice, pminingtoolprice, pmissileprice,
+                 pflareprice):
         self._systemname = psystemname
         self._stationname = pstationname
         self._posx = pposx
@@ -369,127 +372,107 @@ class Starsystem(object):
         self._goods = pgoods
         self._dockingcomputerprice = pdockingcomputerprice
         self._miningtoolprice = pminingtoolprice
+        self._missileprice = pmissileprice
+        self._flareprice = pflareprice
 
     @property
     def systemname(self):
         return self._systemname
-
 
     @systemname.setter
     def systemname(self, value):
         self._systemname = value
         return
 
-
     @property
     def stationname(self):
         return self._stationname
-
 
     @stationname.setter
     def stationname(self, value):
         self._stationname = value
         return
 
-
     @property
     def posx(self):
         return self._posx
-
 
     @posx.setter
     def posx(self, value):
         self._posx = value
         return
 
-
     @property
     def posy(self):
         return self._posy
-
 
     @posy.setter
     def posy(self, value):
         self._posy = value
         return
 
-
     @property
     def economy(self):
         return self._economy
-
 
     @economy.setter
     def economy(self, value):
         self._economy = value
         return
 
-
     @property
     def politics(self):
         return self._politics
-
 
     @politics.setter
     def politics(self, value):
         self._politics = value
         return
 
-
     @property
     def techlevel(self):
         return self._techlevel
-
 
     @techlevel.setter
     def techlevel(self, value):
         self._techlevel = value
         return
 
-
     @property
     def dockingfee(self):
         return self._dockingfee
-
 
     @dockingfee.setter
     def dockingfee(self, value):
         self._dockingfee = value
         return
 
-
     @property
     def fuelprice(self):
         return self._fuelprice
-
 
     @fuelprice.setter
     def fuelprice(self, value):
         self._fuelprice = value
         return
 
-
     @property
     def hullrepair(self):
         return self._hullrepair
-
 
     @hullrepair.setter
     def hullrepair(self, value):
         self._hullrepair = value
         return
 
-
     @property
     def goods(self):
         return self._goods
-
 
     @goods.setter
     def goods(self, value):
         self._goods = value
         return
-
 
     @property
     def dockingcomputerprice(self):
@@ -507,6 +490,25 @@ class Starsystem(object):
     @miningtoolprice.setter
     def miningtoolprice(self, value):
         self._miningtoolprice = value
+        return
+
+    @property
+    def missileprice(self):
+        return self._missileprice
+
+    @missileprice.setter
+    def missileprice(self, value):
+        self._missileprice = value
+        return
+
+
+    @property
+    def flareprice(self):
+        return self._flareprice
+
+    @flareprice.setter
+    def flareprice(self, value):
+        self._flareprice = value
         return
 
 
@@ -609,7 +611,6 @@ game_config = GameConfig(1, "_")
 DEFAULT_MANUAL_DOCKING_SUCCESS_RATE = 80
 DEFAULT_FUEL_PRICE = 10  # PER 1 LIGHTYEAR
 DEFAULT_HULL_FIXING_PRICE = 1  # PER 10% HULL
-DEFAULT_FLARE_PRICE = 3  # PER 10% HULL
 
 cargo = []
 for c in range(0, len(GOODS)):
@@ -653,16 +654,18 @@ GAME = Game(INIT_COMMANDER_NAME, INIT_COMMANDER_COMBAT_RATING, INIT_COMMANDER_LE
 
 LINE_WIDTH = 85
 
+LASER_DAMAGE_MIN = 10
+LASER_DAMAGE_MAX = 25
+MISSILE_DAMAGE_MIN = 40
+MISSILE_DAMAGE_MAX = 70
 
 
 def GenerateGalacticMap():
-
     global STARSYSTEMS
 
-
     STARSYSTEMS.clear()
-    MAP_MAX_X=round(len(STARSYSTEM_NAMES)*1,0)
-    MAP_MAX_Y=round(len(STARSYSTEM_NAMES)*1,0)
+    MAP_MAX_X = round(len(STARSYSTEM_NAMES) * 1, 0)
+    MAP_MAX_Y = round(len(STARSYSTEM_NAMES) * 1, 0)
 
     # generate data for initial station
     SYSNAME = random.choice(INIT_STARSYSTEM_NAMES)
@@ -675,18 +678,20 @@ def GenerateGalacticMap():
     SYSDOCKINGFEE = random.randint(0, 100) / 50  # DOCKING FEE, FLOAT
     SYSFUELPRICE = 1
     SYSHULLFIXPRICE = 1
-    SYSGOODS = []
+    MISSILEPRICE = random.randint(5, 10)
+    DOCKINGCOMPUTERPRICE = random.randint(120, 150)
+    MININGTOOLPRICE = random.randint(50, 75)
+    FLAREPRICE = random.randint(5, 10)
 
+    SYSGOODS = []
     for G in range(0, len(GOODS)):
-        GOODS_PRICE_MODIFIER = round(random.randint(75, 125) / 100,2)
-        ACTUAL_PRICE = round(GOODS_DEFAULT_PRICES[G] * GOODS_PRICE_MODIFIER,2)
+        GOODS_PRICE_MODIFIER = round(random.randint(75, 125) / 100, 2)
+        ACTUAL_PRICE = round(GOODS_DEFAULT_PRICES[G] * GOODS_PRICE_MODIFIER, 2)
         SYSGOODS.append(Goods(G, ACTUAL_PRICE, 1, 0))
 
-    DOCKINGCOMPUTERPRICE=random.randint(120,150)
-    MININGTOOLPRICE=random.randint(50,75)
-
     s = Starsystem(SYSNAME, SYSNAME, SYSPOSX, SYSPOSY, SYSECONOMY, SYSPOLITICS, SYSTECHLEVEL, SYSDOCKINGFEE,
-                   SYSFUELPRICE, SYSHULLFIXPRICE, SYSGOODS, DOCKINGCOMPUTERPRICE, MININGTOOLPRICE)
+                   SYSFUELPRICE, SYSHULLFIXPRICE, SYSGOODS, DOCKINGCOMPUTERPRICE, MININGTOOLPRICE, MISSILEPRICE,
+                   FLAREPRICE)
 
     STARSYSTEMS.append(s)
 
@@ -694,17 +699,17 @@ def GenerateGalacticMap():
     CURRENTPOSX = STARSYSTEMS[0].posx
     CURRENTPOSY = STARSYSTEMS[0].posy
 
-    SYSTEMS_IN_RANGE=0
+    SYSTEMS_IN_RANGE = 0
 
     TEMP_STARSYSTEMS = []
     while SYSTEMS_IN_RANGE < 4:
 
         TEMP_STARSYSTEMS.clear()
         # generate data for the rest of the world
-        for i in range(0,len(STARSYSTEM_NAMES)):
-            SYSNAME=STARSYSTEM_NAMES[i]
-            SYSPOSX = random.randint(random.randint(3,6), MAP_MAX_X)
-            SYSPOSY = random.randint(random.randint(3,6), MAP_MAX_Y)
+        for i in range(0, len(STARSYSTEM_NAMES)):
+            SYSNAME = STARSYSTEM_NAMES[i]
+            SYSPOSX = random.randint(random.randint(3, 6), MAP_MAX_X)
+            SYSPOSY = random.randint(random.randint(3, 6), MAP_MAX_Y)
             SYSECONOMY = random.choice(["", "POOR", "RICH"]) + ' ' + random.choice(ECONOMY)
             SYSECONOMY = SYSECONOMY.lstrip()
             SYSPOLITICS = random.choice(POLITICS)  # POLITICS, TEXT
@@ -712,17 +717,20 @@ def GenerateGalacticMap():
             SYSDOCKINGFEE = random.randint(0, 100) / 50  # DOCKING FEE, FLOAT
             SYSFUELPRICE = 1
             SYSHULLFIXPRICE = 1
-            DOCKINGCOMPUTERPRICE=random.randint(120,150)
-            MININGTOOLPRICE=random.randint(50,75)
+            MISSILEPRICE = random.randint(5, 10)
+            DOCKINGCOMPUTERPRICE = random.randint(120, 150)
+            MININGTOOLPRICE = random.randint(50, 75)
+            FLAREPRICE = random.randint(5, 10)
 
             SYSGOODS = []
-            for G in range(0,len(GOODS)):
-                GOODS_PRICE_MODIFIER=round(random.randint(75,115)/100,2)
-                SYSTEM_PRICE=round(GOODS_DEFAULT_PRICES[G] * GOODS_PRICE_MODIFIER,2)
-                SYSGOODS.append(Goods(G,SYSTEM_PRICE, 1, 0))
+            for G in range(0, len(GOODS)):
+                GOODS_PRICE_MODIFIER = round(random.randint(75, 115) / 100, 2)
+                SYSTEM_PRICE = round(GOODS_DEFAULT_PRICES[G] * GOODS_PRICE_MODIFIER, 2)
+                SYSGOODS.append(Goods(G, SYSTEM_PRICE, 1, 0))
 
             s = Starsystem(SYSNAME, SYSNAME, SYSPOSX, SYSPOSY, SYSECONOMY, SYSPOLITICS, SYSTECHLEVEL, SYSDOCKINGFEE,
-                          SYSFUELPRICE, SYSHULLFIXPRICE, SYSGOODS, DOCKINGCOMPUTERPRICE, MININGTOOLPRICE)
+                           SYSFUELPRICE, SYSHULLFIXPRICE, SYSGOODS, DOCKINGCOMPUTERPRICE, MININGTOOLPRICE, MISSILEPRICE,
+                           FLAREPRICE)
 
             TEMP_STARSYSTEMS.append(s)
 
@@ -733,10 +741,8 @@ def GenerateGalacticMap():
             if D <= GAME.ship_fuel:
                 SYSTEMS_IN_RANGE += 1
 
-
-    STARSYSTEMS+=TEMP_STARSYSTEMS
+    STARSYSTEMS += TEMP_STARSYSTEMS
     return
-
 
 
 def _print(text):
@@ -839,14 +845,14 @@ def GenerateSpaceEvent():
                     if random.randint(0, 10) <= 3:
                         RETURNCODE = 3  # corrupt police
                     else:
-                        RETURNCODE = 0  # pirates
+                        RETURNCODE = 0  # !!! pirates !!!
             elif POLITICS == "NEUTRAL":
                 if random.randint(0, 10) <= 4:  # police
                     RETURNCODE = 2
             elif POLITICS == "LAWFUL":
                 if random.randint(0, 10) <= 2:  # police
                     RETURNCODE = 2
-
+    RETURNCODE = 0
     return RETURNCODE
 
 
@@ -887,7 +893,8 @@ def CorruptPoliceInvestigation():
     _print("You stumble upon a police ship.")
     _print("Blue and red lights everywhere.")
     _print("You are instructed to let the police ship's squad board your ship to search for illegal goods.")
-    FEE=int(random.randint(1,round(GAME.commander_credit * 0.2,2)))
+    _print("")
+    FEE=int(random.randint(1,round(GAME.commander_credit * 0.2,0)))
     if random.randint(1,2) == 1:
         REASON="your \"windshield is dirty\""
     else:
@@ -907,7 +914,10 @@ def GameOver():
     global GAME
 
     _print("Game Over")
-    MenuShowStats(GAME, "game_over")
+    _print("")
+    if input(" Do you want to see the game statistics? [Y/n] ").upper() != "N":
+        MenuShowStats(GAME, "game_over")
+    _print("")
     QuitGame()
 
     return
@@ -923,13 +933,11 @@ def NewOrLoad():
         NewGame()
     else:
         _print("")
-        ANSWER = input(" Load previous game? [Y/N] ").upper()
-        if ANSWER == "":
-            ANSWER="Y"
-        if ANSWER == "Y":
+        ANSWER = input(" Load previous game? [Y/n] ").upper()
+        if ANSWER == "" or ANSWER == "Y":
             with open('game.save', 'rb') as fin:
-             GAME=pickle.load(fin)
-             STARSYSTEMS=pickle.load(fin)
+                GAME=pickle.load(fin)
+                STARSYSTEMS=pickle.load(fin)
             fin.close()
         else:
             NewGame()
@@ -1029,14 +1037,14 @@ def NewGame():
 
 
 
-def ArmorHullLaser():
+def AsteroidHullLaser():
     E = random.randint(0, 2)
     C = ""
     while C not in ['A', 'H', 'L', 'X']:
         C = input(" Your choice (A, H, L, (X for Escape)): ").upper()
 
     if C == 'X':
-        RESULT = "D"
+        RESULT = "X"
     else:
         if C == 'A':
             C = 0
@@ -1085,7 +1093,7 @@ SPACE FIGHT
 def SpaceFight():
     global GAME
 
-    RETURNCODE=""
+    RETURNCODE = ""
     GAME.fight_count += 1
 
     ClearScreen()
@@ -1093,8 +1101,10 @@ def SpaceFight():
     _print("The space jump is interrupted by a gravity anomaly and you fall out from hyperspace.")
     _print("")
 
+    # quickly build a handful hostile ships
     enemyships = []
     for i in range(random.randint(1, 3)):
+        # type, hull, missiles
         e = EnemyShip(random.choice(ENEMY_SHIP_TYPE), random.randint(50, 100), random.randint(0, 3))
         enemyships.append(e)
 
@@ -1103,144 +1113,189 @@ def SpaceFight():
     _print("")
     if len(enemyships) > 1:
         _print("You are facing " + str(len(enemyships)) + " hostile ships.")
-        _print("You have to fight them one by one in a ASTEROID-HULL-LASER GAME.")
+        _print("You have to fight them one by one in a ASTEROID-HULL-LASER game.")
     else:
         _print("You are attacked by a hostile ship.")
-        _print("You have to fight it in a ASTEROID-HULL-LASER GAME.")
+        _print("You have to fight it in a ASTEROID-HULL-LASER game.")
 
     _print("")
-    CHOICE=random.randint(0,5)
+    CHOICE = random.randint(0, 5)
     if CHOICE < 2:
         _print("You toss a power metal audio cassette in the player and hit the play button.")
     if CHOICE >= 5:
         _print("You let out a rebel yell and head jump into the battle.")
     _print("")
 
-    ROUND = 0
+    ENEMY_SHIP_INDEX = 0
 
-    while ROUND < len(enemyships) and GAME.ship_hull > 0:
+    AHL_RESULT = ""
+
+    while ENEMY_SHIP_INDEX < len(enemyships) and GAME.ship_hull > 0 and AHL_RESULT != "X":
 
         # fight 'til the end
-        while GAME.ship_hull > 0 and enemyships[ROUND].ship_hull > 0:
+        while GAME.ship_hull > 0 and enemyships[ENEMY_SHIP_INDEX].ship_hull > 0 and AHL_RESULT != "X":
 
             _print("")
-            _print("Enemy ship #" + str(ROUND + 1) + ", type: \"" + enemyships[ROUND].ship_type + "\", hull: " + str(
-                enemyships[ROUND].ship_hull))
+            _print("Enemy ship #" + str(ENEMY_SHIP_INDEX + 1) + ", type: \"" + enemyships[
+                ENEMY_SHIP_INDEX].ship_type + "\", hull: " + str(
+                enemyships[ENEMY_SHIP_INDEX].ship_hull))
 
-            RESULT = ArmorHullLaser()
-            _print("")
+            AHL_RESULT = AsteroidHullLaser()
 
-            if GAME.ship_missile_count:
-                GAME.ship_missile_count = GAME.ship_missile_count - 1
-                COMMANDER_DAMAGE = random.randint(34, 70)
-                TEXT="You launched a missile. (" + str(GAME.ship_missile_count) + " left)"
-                _print('{:>80}'.format(TEXT))
-                #_print("You launched a missile. (" + str(GAME.ship_missile_count) + " left)")
+            if AHL_RESULT != "X":
+
+                if GAME.ship_missile_count:
+                    GAME.ship_missile_count -= 1
+                    COMMANDER_DAMAGE = random.randint(MISSILE_DAMAGE_MIN, MISSILE_DAMAGE_MAX)
+                    TEXT = "You launched a missile. (" + str(GAME.ship_missile_count) + " left)"
+                    _print('{:>80}'.format(TEXT))
+                else:
+                    COMMANDER_DAMAGE = random.randint(LASER_DAMAGE_MIN, LASER_DAMAGE_MAX)
+                    _print("You fired your laser.")
+                    if random.randint(1, 5) >= 4:
+                        _print("Red and yellow lines draw deadly shapes on the background.")
+
+                if enemyships[ENEMY_SHIP_INDEX].missile:
+                    _print("Enemy ship #" + str(ENEMY_SHIP_INDEX + 1) + " launched a missile !!!")
+
+                    # use flare if exists
+                    if GAME.ship_flare_count:
+                        _print("You have released a flare container. A small white-hot ball of fire is burning behind you.")
+                        # 70% chance that the flare distracts the incoming missile
+                        if random.randint(0, 100) > 70:
+                         ENEMY_DAMAGE = random.randint(MISSILE_DAMAGE_MIN, MISSILE_DAMAGE_MAX)
+                         GAME.ship_flare_count -= 1
+                        else:
+                            ENEMY_DAMAGE = 0
+                    enemyships[ENEMY_SHIP_INDEX].missile -= 1
+                else:
+                    ENEMY_DAMAGE = random.randint(LASER_DAMAGE_MIN, LASER_DAMAGE_MAX)
+                    _print("Enemy ship #" + str(ENEMY_SHIP_INDEX + 1) + " fires with laser.")
+
+                _print("")
+                # enemy ship wins the round
+                if AHL_RESULT == "E":
+                    if ENEMY_DAMAGE:
+                        GAME.ship_hull -= ENEMY_DAMAGE
+                        if GAME.ship_hull < 0:
+                           GAME.ship_hull = 0
+                        _print("---> Your ship got hit. Hull damage is " + str(ENEMY_DAMAGE) + " points (" + str(
+                            GAME.ship_hull) + " left)")
+                    else:
+                        _print("Ememy shot missed. You ecstatically hit the console with your fist.")
+
+                # commander wins the round
+                if AHL_RESULT == "C":
+                    enemyships[ENEMY_SHIP_INDEX].ship_hull -= COMMANDER_DAMAGE
+                    _print("<--- You hit the enemy ship and caused " + str(COMMANDER_DAMAGE) + " points of damage.")
+
+                # both commander and enemy are lame
+                if AHL_RESULT == "D":
+                    _print(">---< Both of you missed.")
+
+            if enemyships[ENEMY_SHIP_INDEX].ship_hull <= 0:
+                _print("!!! You killed Enemy #" + str(ENEMY_SHIP_INDEX + 1) + " !!!")
+                BOUNTY = random.randint(5, 10)
+                GAME.commander_credit += BOUNTY
+                _print("")
+                _print("")
+                _print("Well done, space is much safer now.")
+                _print("")
+                _print("You get a bounty of " + str(BOUNTY) + " credit.")
+                _print("")
+                _print("")
+                GAME.kill_count += 1
+                if GAME.kill_count == 1:
+                    NEW_COMBAT_RATING = 1
+                    GAME.commander_combat_rating = NEW_COMBAT_RATING
+                    _print("Wow, your combat rating just upgraded to " + COMBAT_RATING[NEW_COMBAT_RATING] + " !!!")
+                    _print("")
+                elif GAME.kill_count == 5:
+                    NEW_COMBAT_RATING = 2
+                    GAME.commander_combat_rating = NEW_COMBAT_RATING
+                    _print("You are getting more dangerous. From now on you are " + COMBAT_RATING[NEW_COMBAT_RATING])
+                    _print("")
+                elif GAME.kill_count == 12:
+                    NEW_COMBAT_RATING = 3
+                    GAME.commander_combat_rating = NEW_COMBAT_RATING
+                    _print(
+                        "The Intergalactic Combatrating Committee just sent yo a notification that from now on your rating is " +
+                        COMBAT_RATING[NEW_COMBAT_RATING])
+                    _print("")
+                elif GAME.kill_count == 25:
+                    NEW_COMBAT_RATING = 4
+                    GAME.commander_combat_rating = NEW_COMBAT_RATING
+                    _print("Another victory, another promotion. Your new rating is " + COMBAT_RATING[NEW_COMBAT_RATING])
+                    _print("")
+                elif GAME.kill_count == 50:
+                    NEW_COMBAT_RATING = 5
+                    GAME.commander_combat_rating = NEW_COMBAT_RATING
+                    _print("You reached " + COMBAT_RATING[NEW_COMBAT_RATING] + " combat rating which is nice.")
+                    _print("")
+                _print("")
+                _print("")
+
+            if GAME.ship_hull <= 0:
+                _print("")
+                _print("Enemy #" + str(ENEMY_SHIP_INDEX + 1) + " killed you.")
+                ENEMY_SHIP_INDEX = 99999
+                RETURNCODE = "SPACEFIGHT-GAMEOVER"
             else:
-                COMMANDER_DAMAGE = random.randint(4, 40)
-                _print("You fired your laser.")
-                if random.randint(1, 5) >= 4:
-                    _print("Red and yellow lines draw deadly shapes on the background.")
+                # next enemy
+                ENEMY_SHIP_INDEX += 1
 
-            if enemyships[ROUND].missile:
-                _print("Enemy ship #" + str(ROUND + 1) + " launched a missile !!!")
-                ENEMY_DAMAGE = random.randint(34, 70)
-                enemyships[ROUND].missile -= 1
-            else:
-                ENEMY_DAMAGE = random.randint(4, 40)
-                _print("Enemy ship #" + str(ROUND + 1) + " fires with laser.")
+        # end of individual enemy ship loop
 
-            _print("")
-            if RESULT == "E":
-                GAME.ship_hull -= ENEMY_DAMAGE
-                if GAME.ship_hull < 0:
-                    GAME.ship_hull = 0
-                _print("---> Your ship got hit. Hull damage is " + str(ENEMY_DAMAGE) + " points (" + str(
-                    GAME.ship_hull) + " left)")
-            if RESULT == "C":
-                enemyships[ROUND].ship_hull -= COMMANDER_DAMAGE
-                _print("<--- You hit the enemy ship and caused " + str(COMMANDER_DAMAGE) + " points of damage.")
-            if RESULT == "D":
-                _print(">---< Both of you missed.")
+    # end of big while loop, end of fight
 
-        if enemyships[ROUND].ship_hull <= 0:
-            _print("!!! You killed Enemy #" + str(ROUND + 1) + " !!!")
-            BOUNTY = random.randint(5, 10)
-            GAME.commander_credit += BOUNTY
-            _print("")
-            _print("")
-            _print("Well done, space is much safer now.")
-            _print("")
-            _print("You get a bounty of " + str(BOUNTY) + " credit.")
-            _print("")
-            _print("")
-            GAME.kill_count += 1
-            if GAME.kill_count == 1:
-                NEW_COMBAT_RATING = 1
-                GAME.commander_combat_rating = NEW_COMBAT_RATING
-                _print("Wow, your combat rating just upgraded to " + COMBAT_RATING[NEW_COMBAT_RATING] + " !!!")
-                _print("")
-            elif GAME.kill_count == 5:
-                NEW_COMBAT_RATING = 2
-                GAME.commander_combat_rating = NEW_COMBAT_RATING
-                _print("You are getting more dangerous. From now on you are " + COMBAT_RATING[NEW_COMBAT_RATING])
-                _print("")
-            elif GAME.kill_count == 12:
-                NEW_COMBAT_RATING = 3
-                GAME.commander_combat_rating = NEW_COMBAT_RATING
-                _print(
-                    "The Intergalactic Combatrating Committee just sent yo a notification that from now on your rating is " +
-                    COMBAT_RATING[NEW_COMBAT_RATING])
-                _print("")
-            elif GAME.kill_count == 25:
-                NEW_COMBAT_RATING = 4
-                GAME.commander_combat_rating = NEW_COMBAT_RATING
-                _print("Another victory, another promotion. Your new rating is " + COMBAT_RATING[NEW_COMBAT_RATING])
-                _print("")
-            elif GAME.kill_count == 50:
-                NEW_COMBAT_RATING = 5
-                GAME.commander_combat_rating = NEW_COMBAT_RATING
-                _print("You reached " + COMBAT_RATING[NEW_COMBAT_RATING] + " combat rating which is nice.")
-                _print("")
-            _print("")
-            _print("")
 
-        if GAME.ship_hull <= 0:
-            _print("")
-            _print("Enemy #" + str(ROUND + 1) + " killed you.")
-            ROUND = 99999
-            RETURNCODE="SPACEFIGHT-GAMEOVER"
+    if AHL_RESULT == "X":
+        _print("")
+        if ENEMY_SHIP_INDEX < len(enemyships):
+            ENEMY_DAMAGE = random.randint(0, round(GAME.ship_hull * 0.5))
+            _print(
+                "You try to escape the fight. All the enemy ships fire at you with all their weapons and cause a " + str(
+                    ENEMY_DAMAGE) + " points of damage.")
         else:
-            # next enemy
-            ROUND += 1
+            ENEMY_DAMAGE = random.randint(0, round(GAME.ship_hull * 0.2))
+            _print(
+                "You try to escape the fight. The remaining enemy ship fires at you with all its weapons and cause a " + str(
+                    ENEMY_DAMAGE) + " points of damage.")
+        GAME.ship_hull -= ENEMY_DAMAGE
 
     # end of fight
     if GAME.ship_hull:
-        if random.randint(0, 100) < 35:
-            # there is some leftover
-            if GAME.ship_mining_tool:
-                AMOUNT=GAME.ship_max_cargo - CargoCount()
-                if AMOUNT:
-                    ALLOY_ID=GOODS.index("ALLOYS")
-                    _print("The space is full of precious alloy floating around you. It is free money! You just enter the mining tool's activation sequence in your command console and your cargo slowly gets filled with alloy.")
-                    _print("You harvested " + str(AMOUNT) + " alloy. Good work!")
-                    AddItemToCargo(ALLOY_ID, AMOUNT)
+
+        if AHL_RESULT != "X":
+            if random.randint(0, 100) < 35:
+                # there is some leftover floating in space
+                if GAME.ship_mining_tool:
+                    AMOUNT = GAME.ship_max_cargo - CargoCount()
+                    if AMOUNT:
+                        ALLOY_ID = GOODS.index("ALLOYS")
+                        _print(
+                            "The space is full of precious alloy floating around you. It is free money! You just enter the mining tool's activation sequence in your command console and your cargo slowly gets filled with alloy.")
+                        _print("You harvested " + str(AMOUNT) + " alloy. Good work!")
+                        AddItemToCargo(ALLOY_ID, AMOUNT)
+                    else:
+                        _print(
+                            "The space is full of precious alloy floating around you. It is free money! But your cargo is already full...")
+                        _print("You stare at it with a long face and feel sorry for yourself.")
+                        _print("")
+                        _print("Some time later you kick in the engines and continue your journey.")
+
                 else:
-                    _print("The space is full of precious alloy floating around you. It is free money! But your cargo is already full...")
-                    _print("You stare at it with a long face and feel sorry for yourself.")
-                    _print("")
-                    _print("Some time later you kick in the engines and continue your journey.")
+                    _print(
+                        "There is a lot of alloy floating around you. However you still didn't equip your ship with a mining tool so you are just sitting there with a long face thinking about the easy money you'll never have.")
+    else:
+        _print("You barely escape the fight.")
+        _print("")
 
-            else:
-                _print("There is a lot of alloy floating around you. However you still didn't equip your ship with a mining tool so you are just sitting there with a long face thinking about the easy money you'll never have.")
-
-    print(""*3)
+    print("" * 3)
     try:
-        ANSWER = input(" Enter")
-        ANSWER = ANSWER.upper()
+        ANSWER = input(" Enter").upper()
     except KeyboardInterrupt:
         QuitGame()
-
 
     return RETURNCODE
 
@@ -1567,8 +1622,7 @@ def MenuStationRepair():
     ShowFooter()
 
     try:
-        ANSWER = input(" How much do you want to spend (or return to the hangar) > ")
-        ANSWER = ANSWER.upper()
+        ANSWER = input(" How much do you want to spend (or return to the hangar) > ").upper()
     except KeyboardInterrupt:
         QuitGame()
 
@@ -1701,8 +1755,7 @@ def MenuStationBuyGoods():
     ShowFooter()
 
     try:
-        ANSWER = input(" Enter ITEMID and AMOUNT (i.e. 1 1) or return to the hangar > ")
-        ANSWER = ANSWER.upper()
+        ANSWER = input(" Enter ITEMID and AMOUNT (i.e. 1 1) or return to the hangar > ").upper()
     except KeyboardInterrupt:
         QuitGame()
 
@@ -1781,11 +1834,17 @@ def MenuStationImprove():
 
     if not int(GAME.ship_mining_tool):
         PRICE = STARSYSTEMS[GAME.current_starystem].miningtoolprice
-        _print("M - Equip your ship with a mining tool. The price is just " + str(PRICE) + " credit")
+        _print("T - Equip your ship with a mining tool. The price is just " + str(PRICE) + " credit")
+        _print("")
+
+    if GAME.ship_missile_count < GAME.ship_max_missile_count:
+        PRICE = STARSYSTEMS[GAME.current_starystem].missileprice
+        _print("M - An IR guided missile is the merchant's best friend. Friendship is priceless but it costs. Now " + str(PRICE) + " credit. Each.")
         _print("")
 
     if GAME.ship_flare_count < GAME.ship_max_flare_count:
-        _print("F - flare (" + str(DEFAULT_FLARE_PRICE) + " credit per container, you have " + str(
+        PRICE = STARSYSTEMS[GAME.current_starystem].flareprice
+        _print("F - flare (" + str(PRICE) + " credit per container, you have " + str(
             GAME.ship_flare_count) + "/" + str(GAME.ship_max_flare_count) + " container.)")
         _print("")
 
@@ -1853,10 +1912,10 @@ def MainLoop():
                 if KEY.find(" ") > 0:
                     ANSWER = KEY.rsplit(' ', 1)
                     GOODSID = ANSWER[0]
-                    GOODSAMOUNT = ANSWER[1]
+                    GOODSAMOUNT = round(float(ANSWER[1]),2)
                     CURRENTSTARSYSTEM = STARSYSTEMS[GAME.current_starystem]
                     GOODSLOCALPRICE = round(CURRENTSTARSYSTEM.goods[int(GOODSID)].goodslocalprice, 2)
-                    PRICE = int(GOODSAMOUNT) * round(GOODSLOCALPRICE, 2)
+                    PRICE = round(GOODSAMOUNT * round(GOODSLOCALPRICE, 2),2)
                     if PRICE > GAME.commander_credit:
                         PRICE=GAME.commander_credit
                         GOODSAMOUNT= round(PRICE / CURRENTSTARSYSTEM.goods[int(GOODSID)].goodslocalprice,2)
@@ -1874,12 +1933,12 @@ def MainLoop():
                 if KEY.find(" ") > 0:
                     ANSWER = KEY.rsplit(' ', 1)
                     GOODSID = ANSWER[0]
-                    GOODSAMOUNT = ANSWER[1]
+                    GOODSAMOUNT = round(float(ANSWER[1]),2)
                     CURRENTSTARSYSTEM = STARSYSTEMS[GAME.current_starystem]
                     GOODSLOCALPRICE = round(CURRENTSTARSYSTEM.goods[int(GOODSID)].goodslocalprice, 2)
                     if int(GOODSAMOUNT) > GAME.ship_cargo[int(GOODSID)].amount:
                         GOODSAMOUNT = GAME.ship_cargo[int(GOODSID)].amount
-                    PRICE = round(int(GOODSAMOUNT) * round(GOODSLOCALPRICE, 2),2)
+                    PRICE = round(GOODSAMOUNT * round(GOODSLOCALPRICE, 2),2)
 
                     GAME.commander_credit += PRICE
                     RemoveItemFromCargo(GOODSID, GOODSAMOUNT)
@@ -1897,19 +1956,22 @@ def MainLoop():
                         GAME.ship_docking_computer = 1
                         GAME.commander_credit -= PRICE
             elif KEY in ["M"]:
+                PRICE=STARSYSTEMS[GAME.current_starystem].missileprice
+                if GAME.commander_credit >= PRICE:
+                    if GAME.ship_missile_count < GAME.ship_max_missile_count:
+                        GAME.ship_missile_count += 1
+                        GAME.commander_credit -= PRICE
+            elif KEY in ["T"]:
                 PRICE=STARSYSTEMS[GAME.current_starystem].miningtoolprice
                 if GAME.commander_credit >= PRICE:
                     if not GAME.ship_mining_tool:
                         GAME.ship_mining_tool = 1
                         GAME.commander_credit -= PRICE
-            elif (KEY[:2] == "F "):
-                ANSWER = KEY.rsplit(' ', 1)
-                AMOUNT = int(ANSWER[1])
-                if AMOUNT > (GAME.ship_max_flare_count - GAME.ship_flare_count):
-                    AMOUNT = GAME.ship_max_flare_count - GAME.ship_flare_count
-                PRICE=AMOUNT * DEFAULT_FLARE_PRICE
-                GAME.commander_credit-=PRICE
-                GAME.ship_flare_count+=AMOUNT
+            elif KEY in ["F"]:
+                if GAME.ship_flare_count < GAME.ship_max_flare_count:
+                    PRICE=STARSYSTEMS[GAME.current_starystem].flareprice
+                    GAME.commander_credit-=PRICE
+                    GAME.ship_flare_count+=1
 
         # ------------------------------------------------------------------------ STATION - REFUEL
         elif GAME.game_position == "STATION-REFUEL":
@@ -1955,6 +2017,7 @@ def MainLoop():
             if KEY in ["R", ""]:
                 GAME.game_position = "SPACE-NEARSTATION"
             elif KEY.isdigit():
+                # @todo: not calculated correctly, leaving and immediate docking also counts which is a bug
                 GAME.jump_count += 1
                 GAME.ship_track.append(int(KEY))
 
