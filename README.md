@@ -10,7 +10,7 @@ Tested on:
 * FreeBSD 12
 * Windows (works with some unexpected minor issues)
 
-2019.01.29. - First public release with bugs, features and glitches.
+
 
 
 # Gameplay
