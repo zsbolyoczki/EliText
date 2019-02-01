@@ -661,6 +661,7 @@ MISSILE_DAMAGE_MAX = 70
 
 
 def GenerateGalacticMap():
+
     global STARSYSTEMS
 
     STARSYSTEMS.clear()
@@ -852,7 +853,7 @@ def GenerateSpaceEvent():
             elif POLITICS == "LAWFUL":
                 if random.randint(0, 10) <= 2:  # police
                     RETURNCODE = 2
-    
+
     return RETURNCODE
 
 
@@ -1133,8 +1134,10 @@ def SpaceFight():
     while ENEMY_SHIP_INDEX < len(enemyships) and GAME.ship_hull > 0 and AHL_RESULT != "X":
 
         # fight 'til the end
+
         while GAME.ship_hull > 0 and enemyships[ENEMY_SHIP_INDEX].ship_hull > 0 and AHL_RESULT != "X":
 
+            ENEMY_ESCAPES=0
             _print("")
             _print("Enemy ship #" + str(ENEMY_SHIP_INDEX + 1) + ", type: \"" + enemyships[
                 ENEMY_SHIP_INDEX].ship_type + "\", hull: " + str(
@@ -1172,7 +1175,9 @@ def SpaceFight():
                     ENEMY_DAMAGE = random.randint(LASER_DAMAGE_MIN, LASER_DAMAGE_MAX)
                     _print("Enemy ship #" + str(ENEMY_SHIP_INDEX + 1) + " fires with laser.")
 
+
                 _print("")
+
                 # enemy ship wins the round
                 if AHL_RESULT == "E":
                     if ENEMY_DAMAGE:
@@ -1188,12 +1193,19 @@ def SpaceFight():
                 if AHL_RESULT == "C":
                     enemyships[ENEMY_SHIP_INDEX].ship_hull -= COMMANDER_DAMAGE
                     _print("<--- You hit the enemy ship and caused " + str(COMMANDER_DAMAGE) + " points of damage.")
+                    if enemyships[ENEMY_SHIP_INDEX].ship_hull < 15:
+                        if random.randint(0,9) < 2:
+                            ENEMY_ESCAPES=1
 
                 # both commander and enemy are lame
                 if AHL_RESULT == "D":
                     _print(">---< Both of you missed.")
 
-            if enemyships[ENEMY_SHIP_INDEX].ship_hull <= 0:
+
+            if ENEMY_ESCAPES:
+                _print("Enemy ship #" + str(ENEMY_SHIP_INDEX) + " just escaped the fight. What a coward!")
+                ENEMY_SHIP_INDEX += 1
+            elif enemyships[ENEMY_SHIP_INDEX].ship_hull <= 0:
                 _print("!!! You killed Enemy #" + str(ENEMY_SHIP_INDEX + 1) + " !!!")
                 BOUNTY = random.randint(5, 10)
                 GAME.commander_credit += BOUNTY
@@ -1240,11 +1252,11 @@ def SpaceFight():
                 _print("Enemy #" + str(ENEMY_SHIP_INDEX + 1) + " killed you.")
                 ENEMY_SHIP_INDEX = 99999
                 RETURNCODE = "SPACEFIGHT-GAMEOVER"
-            else:
-                # next enemy
-                ENEMY_SHIP_INDEX += 1
 
         # end of individual enemy ship loop
+
+        # next enemy
+        ENEMY_SHIP_INDEX += 1
 
     # end of big while loop, end of fight
 
@@ -1288,7 +1300,6 @@ def SpaceFight():
                     _print(
                         "There is a lot of alloy floating around you. However you still didn't equip your ship with a mining tool so you are just sitting there with a long face thinking about the easy money you'll never have.")
     else:
-        _print("You barely escape the fight.")
         _print("")
 
     print("" * 3)
@@ -1732,7 +1743,6 @@ def MenuStationBuyGoods():
     _print("You have logged in to the station's online market app.")
     _print("")
 
-    CURRENTSTARSYSTEM=STARSYSTEMS[GAME.current_starystem]
     _print("")
     _print("")
     _print("Credit: " + str(round(GAME.commander_credit,2)))
@@ -1741,11 +1751,14 @@ def MenuStationBuyGoods():
     _print("")
     _print('{:>6} {:<15} {:>5} {:>6} {:>3}'.format("ITEMID", "NAME", "PRICE", "AMOUNT", "LEGAL"))
 
+    CURRENTSTARSYSTEM=STARSYSTEMS[GAME.current_starystem]
     for G in range(0,len(CURRENTSTARSYSTEM.goods)):
         GOODS_ID=CURRENTSTARSYSTEM.goods[G].goodsid
         GOODS_NAME=GOODS[GOODS_ID]
         GOODS_LOCALPRICE=CURRENTSTARSYSTEM.goods[G].goodslocalprice
-        GOODS_AMOUNT = random.randint(0,25)
+        #GOODS_AMOUNT = CURRENTSTARSYSTEM.goods[G].goodsamount
+        # todo: generate the amount at docking
+        GOODS_AMOUNT = random.randint(1,25)
         GOODS_LEGAL = CURRENTSTARSYSTEM.goods[G].goodslegal
         _print('{:>6} {:<15} {:>5} {:>6} {:>3}'.format(GOODS_ID, GOODS_NAME, GOODS_LOCALPRICE, GOODS_AMOUNT, GOODS_LEGAL))
 
@@ -1868,9 +1881,6 @@ def MainLoop():
 
     LoadConfig()
 
-
-    #GAME. = NewOrLoad()
-
     NewOrLoad()
 
     if len(STARSYSTEMS) == 0:
@@ -1913,6 +1923,7 @@ def MainLoop():
                     ANSWER = KEY.rsplit(' ', 1)
                     GOODSID = ANSWER[0]
                     GOODSAMOUNT = round(float(ANSWER[1]),2)
+                    # todo: amount can't be more than the actual amount on the station
                     CURRENTSTARSYSTEM = STARSYSTEMS[GAME.current_starystem]
                     GOODSLOCALPRICE = round(CURRENTSTARSYSTEM.goods[int(GOODSID)].goodslocalprice, 2)
                     PRICE = round(GOODSAMOUNT * round(GOODSLOCALPRICE, 2),2)
@@ -1998,6 +2009,8 @@ def MainLoop():
                 DAMAGE = CalculateDocking()
                 GAME.ship_hull = GAME.ship_hull - DAMAGE
                 GAME.game_position = "STATION-HANGAR"
+                # @todo: generate amount of goods
+
             elif KEY in ["J"]:
                 GAME.game_position = "STARMAP"
 
@@ -2052,19 +2065,6 @@ def MainLoop():
                 elif SpaceEvent == 4: # space fight in the distance
                     SpaceFightInTheDistance()
 
-        # ------------------------------------------------------------------------ DIMENSIONAL EXCEPTION
-        #else:
-        #    _print("You have jumped to an unknown dimension.")
-        #    _print("Strange stars, strange colors.")
-        #    _print("Is this Final Space?")
-        #    _print("")
-        #    _print("The memory of the Great Old Ones is very strong here and you faint while starting to lose your sanity.")
-        #    _print("")
-        #    _print("")
-        #    _print("")
-        #    input("ENTER")
-#
-#            GAME.game_position = "STATION-HANGAR"
 
         # ------------------------------------------------------------------------ OTHER STUFF
         if GAME.ship_hull <= 0:
