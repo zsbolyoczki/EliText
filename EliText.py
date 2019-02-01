@@ -852,7 +852,7 @@ def GenerateSpaceEvent():
             elif POLITICS == "LAWFUL":
                 if random.randint(0, 10) <= 2:  # police
                     RETURNCODE = 2
-    RETURNCODE = 0
+    
     return RETURNCODE
 
 
